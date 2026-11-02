@@ -1,4 +1,5 @@
-# Runs the same checks as `mise run check` on a developer machine.
+# One job per check, so each one has its own status and its own log.
+# Locally `mise run check` runs all of them.
 name: Mise check
 
 on:
@@ -15,12 +16,27 @@ concurrency:
 
 jobs:
   check:
+    name: ${{ matrix.task }}
     runs-on: ubuntu-24.04
     timeout-minutes: 20
+    strategy:
+      # Run every check to the end, even when another one fails.
+      fail-fast: false
+      matrix:
+        task:
+          - gen:check
+          - lint
+          - test
+          - test:presence
+          - vuln
+          - arch
+          - easement
+          - secrets
+          - api:breaking
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          # Full history: betterleaks scans it, oasdiff reads the base spec from it.
+          # Full history: betterleaks scans it, oasdiff and easement read the base from it.
           fetch-depth: 0
           persist-credentials: false
 
@@ -31,9 +47,11 @@ jobs:
           install: true
           cache: true
 
-      - name: mise run check
-        run: mise run check
+      - name: mise run ${{ matrix.task }}
+        run: mise run "$TASK"
         env:
-          # Pull request: compare the API with the target branch.
-          # Push to main: compare with the previous commit.
+          TASK: ${{ matrix.task }}
+          # Pull request: compare with the target branch. Push to main: with the previous commit.
           API_BASE: ${{ github.event_name == 'pull_request' && format('origin/{0}', github.base_ref) || 'HEAD~1' }}
+          # easement writes GitHub annotations on the changed lines.
+          EASEMENT_FORMAT: github

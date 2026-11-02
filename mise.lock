@@ -47,6 +47,28 @@ checksum = "sha256:e2e9e80594afe21c2e2aedddcfce8df77eca19b055cfce0a1be11e85d06c9
 url = "https://github.com/fe3dback/go-arch-lint/releases/download/v1.19.1/go-arch-lint_1.19.1_darwin_arm64.tar.gz"
 url_api = "https://api.github.com/repos/fe3dback/go-arch-lint/releases/assets/689528179"
 
+[[tools."github:mokevnin/easement"]]
+version = "0.4.5"
+backend = "github:mokevnin/easement"
+specifiers = ["0.4.5"]
+
+[tools."github:mokevnin/easement"."platforms.linux-arm64"]
+checksum = "sha256:a3aeebf6fc8a919f63985f4dc097aaa7b5cf6aa85957f61d007dedc6e8b05cd1"
+checksum_source = "mise-versions"
+url = "https://github.com/mokevnin/easement/releases/download/v0.4.5/easement-aarch64-unknown-linux-gnu.tar.xz"
+url_api = "https://api.github.com/repos/mokevnin/easement/releases/assets/700347549"
+
+[tools."github:mokevnin/easement"."platforms.linux-x64"]
+checksum = "sha256:80e19c50e972008522ae6fd07789aed87840e8d6400d4c998e59303804301513"
+checksum_source = "mise-versions"
+url = "https://github.com/mokevnin/easement/releases/download/v0.4.5/easement-x86_64-unknown-linux-gnu.tar.xz"
+url_api = "https://api.github.com/repos/mokevnin/easement/releases/assets/700347604"
+
+[tools."github:mokevnin/easement"."platforms.macos-arm64"]
+checksum = "sha256:beacae205a1fd4ff0db56b7dd8ab0596a9761e6ed0505381d8ac46a0f6d12e86"
+url = "https://github.com/mokevnin/easement/releases/download/v0.4.5/easement-aarch64-apple-darwin.tar.xz"
+url_api = "https://api.github.com/repos/mokevnin/easement/releases/assets/700347547"
+
 [[tools."github:oasdiff/oasdiff"]]
 version = "1.35.0"
 backend = "github:oasdiff/oasdiff"
@@ -68,6 +90,29 @@ url_api = "https://api.github.com/repos/oasdiff/oasdiff/releases/assets/68562225
 checksum = "sha256:964ad2c0331768c4515fc49779827094bc89a65b1d309dac28886d1c3faf305c"
 url = "https://github.com/oasdiff/oasdiff/releases/download/v1.35.0/oasdiff_1.35.0_darwin_all.tar.gz"
 url_api = "https://api.github.com/repos/oasdiff/oasdiff/releases/assets/685622242"
+
+[[tools."github:scip-code/scip-go"]]
+version = "0.2.9"
+backend = "github:scip-code/scip-go"
+specifiers = ["0.2.9"]
+
+[tools."github:scip-code/scip-go"."platforms.linux-arm64"]
+checksum = "sha256:81a196420b1ee64a8820a59287f4bb9cab1849bc3d4e13c97a3130f75d8540fd"
+url = "https://github.com/scip-code/scip-go/releases/download/v0.2.9/scip-go-linux-arm64.tar.gz"
+url_api = "https://api.github.com/repos/scip-code/scip-go/releases/assets/665717988"
+provenance = "github-attestations"
+
+[tools."github:scip-code/scip-go"."platforms.linux-x64"]
+checksum = "sha256:4ec4e45ecdbe6f43055ed555254e049f46f28389ade438db3d59679651fa1292"
+url = "https://github.com/scip-code/scip-go/releases/download/v0.2.9/scip-go-linux-amd64.tar.gz"
+url_api = "https://api.github.com/repos/scip-code/scip-go/releases/assets/665719343"
+provenance = "github-attestations"
+
+[tools."github:scip-code/scip-go"."platforms.macos-arm64"]
+checksum = "sha256:3d8a0c14d0617debcf0c38debe4532d201c89c38a85eaac641da2200bb36d68f"
+url = "https://github.com/scip-code/scip-go/releases/download/v0.2.9/scip-go-darwin-arm64.tar.gz"
+url_api = "https://api.github.com/repos/scip-code/scip-go/releases/assets/665721824"
+provenance = "github-attestations"
 
 [[tools.go]]
 version = "1.27.3"

@@ -15,6 +15,9 @@ betterleaks = "1.9.0"
 "github:oasdiff/oasdiff" = "1.35.0"
 "github:fe3dback/go-arch-lint" = "1.19.1"
 "go:golang.org/x/vuln/cmd/govulncheck" = "1.9.0"
+# easement is young and changes fast: keep its rules in `warn` until it settles.
+"github:mokevnin/easement" = "0.4.5"
+"github:scip-code/scip-go" = "0.2.9"   # Go indexer that easement runs
 
 [env]
 # Make `tsp` and other npm binaries of this project available.
@@ -59,6 +62,21 @@ description = "Run Go tests with the race detector"
 depends = ["gen"]
 run = "go test -race -count=1 ./..."
 
+[tasks."test:presence"]
+description = "Fail if a Go package has no tests (except package main and generated code)"
+depends = ["gen"]
+run = '''
+{% raw %}
+missing="$(go list -f '{{if and (ne .Name "main") (eq (len .TestGoFiles) 0) (eq (len .XTestGoFiles) 0)}}{{.ImportPath}}{{end}}' ./... | grep -v '/internal/api$' || true)"
+{% endraw %}
+if [ -n "$missing" ]; then
+  echo "test:presence: these packages have no *_test.go:"
+  echo "$missing"
+  exit 1
+fi
+echo "test:presence: every package has tests"
+'''
+
 [tasks.build]
 description = "Build the server binary to bin/orders"
 depends = ["gen"]
@@ -84,6 +102,17 @@ run = "govulncheck ./..."
 [tasks.arch]
 description = "Check architecture rules from .go-arch-lint.yml"
 run = "go-arch-lint check --output-color=false"
+
+[tasks.easement]
+description = "Check easement.yml rules and the ARCHITECTURE.md diagram (warnings only for now)"
+depends = ["gen"]
+# EASEMENT_FORMAT=github in CI shows the results on the changed lines of a pull request.
+run = "easement check --color never --format ${EASEMENT_FORMAT:-text}"
+
+[tasks.impact]
+description = "List files that depend on what changed since API_BASE (default: main), to pick tests"
+depends = ["gen"]
+run = "easement impact --color never --diff ${API_BASE:-main}"
 
 [tasks."api:breaking"]
 description = "Fail on breaking API changes against API_BASE (default: main)"
@@ -128,10 +157,10 @@ go mod tidy -diff
 '''
 
 [tasks.check]
-description = "Run every check (the same as CI)"
+description = "Run every check (CI runs each of them as a separate job)"
 run = [
   "mise run gen:check",
-  "mise run lint ::: test ::: vuln ::: arch ::: secrets ::: api:breaking",
+  "mise run lint ::: test ::: test:presence ::: vuln ::: arch ::: easement ::: secrets ::: api:breaking",
 ]
 
 [tasks.secrets]

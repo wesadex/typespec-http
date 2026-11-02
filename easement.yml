@@ -1,0 +1,77 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/mokevnin/easement/main/easement.schema.json
+# Architecture rules checked by `mise run easement` (https://github.com/mokevnin/easement).
+# go-arch-lint (.go-arch-lint.yml) is still the gate; easement adds rules it
+# cannot express: the diagram, indirect dependencies, type names, public symbols
+# and rules for tests. While easement is young, every rule is a warning.
+version: 1
+
+# Every dependency between components needs an arrow in this diagram.
+diagram: ARCHITECTURE.md
+
+# A new directory must belong to a component.
+strict: true
+no_cycles: true
+
+# Test files form their own component with their own rule.
+tests: auto
+
+# Generated code can be imported, but its own imports are not checked.
+target_only: ["internal/api/**"]
+
+components:
+  main:    { in: cmd }
+  api:     { in: internal/api }
+  httpapi: { in: internal/httpapi }
+  order:
+    in: internal/order
+    defines: ["*Repository"]
+    because: repositories are the domain's port to storage
+  storage:
+    in: internal/storage
+    defines: ["*Repository"]
+    public_symbols: [New, Repository]
+    because: storage is used through its constructor and the order.Repository interface
+
+rules:
+  main:
+    may_depend_on: [httpapi, order, storage]
+    because: main only wires components together
+
+  httpapi:
+    may_depend_on: [api, order]
+    must_not_reach:
+      - { name: storage, because: "handlers get data through order.Service, never from storage" }
+    because: the HTTP layer maps between the API and the domain
+
+  order:
+    may_use_external:
+      - context
+      - errors
+      - time
+      - { name: github.com/shopspring/decimal, because: money is exact }
+    must_not_reach:
+      - { name: httpapi, because: the domain knows no transport }
+      - { name: api, because: generated API types stay in the HTTP layer }
+      - { name: storage, because: the domain defines Repository; storage implements it }
+    because: the domain depends on nothing in the project
+
+  storage:
+    may_depend_on: [order]
+    must_not_reach:
+      - { name: httpapi, because: storage knows no transport }
+      - { name: api, because: storage works with domain types }
+
+  tests:
+    may_depend_on: [api, httpapi, order, storage]
+    because: tests may wire real components together, but never import cmd
+
+warn:
+  - dependency
+  - privacy
+  - cycle
+  - external
+  - reach
+  - naming
+  - symbol
+  - diagram
+  - orphan

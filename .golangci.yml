@@ -7,13 +7,45 @@ linters:
   enable:
     - bodyclose
     - errorlint
+    - forbidigo
     - gosec
     - misspell
     - nilerr
     - noctx
+    - nolintlint
     - sloglint
     - unconvert
     - usestdlibvars
+
+  settings:
+    # Every //nolint names the linter and says why; a //nolint that hides
+    # nothing fails too.
+    nolintlint:
+      require-explanation: true
+      require-specific: true
+      allow-unused: false
+
+    forbidigo:
+      analyze-types: true
+      forbid:
+        - pattern: ^fmt\.Print(f|ln)?$
+          msg: write logs with log/slog, not to stdout
+        - pattern: ^log\.(Print|Printf|Println|Fatal|Fatalf|Fatalln|Panic|Panicf|Panicln)$
+          pkg: ^log$
+          msg: use log/slog
+        - pattern: ^http\.(DefaultClient|Get|Head|Post|PostForm)$
+          pkg: ^net/http$
+          msg: the default HTTP client has no timeouts; create an http.Client with Timeout
+        # Only checked in internal/order, see exclusions below.
+        - pattern: ^time\.Now$
+          pkg: ^time$
+          msg: the domain gets time from its caller, so tests can control it
+
+  exclusions:
+    rules:
+      - path-except: ^internal/order/
+        linters: [forbidigo]
+        text: time\.Now
 
 formatters:
   enable:

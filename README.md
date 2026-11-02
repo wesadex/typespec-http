@@ -67,25 +67,37 @@ internal/order/          domain: Order, Service, Repository interface
 internal/storage/memory/ in-memory Repository (demo data until there is a DB)
 ```
 
-Dependencies go one way: `cmd` → `httpapi` → `order` ← `storage`.
-Requests are checked against the OpenAPI spec before they reach the handler,
-and the tests check every response against the spec too.
+Dependencies go one way: `cmd` → `httpapi` → `order` ← `storage`, see
+[ARCHITECTURE.md](ARCHITECTURE.md). Requests are checked against the OpenAPI
+spec before they reach the handler, and the tests check every response against
+the spec too.
 
 ## Checks
 
 ```sh
-mise run check       # all checks below; CI runs the same task
+mise run check       # all checks below; CI runs each one as a separate job
 ```
 
 | Task | Tool | Fails when |
 |---|---|---|
 | `gen:check` | tsp, oapi-codegen, `go mod tidy -diff` | generated files are stale or edited by hand; `go.mod` is not tidy |
-| `lint` | golangci-lint (`.golangci.yml`) | lint issues or unformatted code |
+| `lint` | golangci-lint (`.golangci.yml`) | lint issues or unformatted code; `fmt.Print*`, `log.*`, `http.DefaultClient`, `time.Now()` in the domain; a `//nolint` without linter name and reason, or one that hides nothing |
 | `test` | `go test -race` | a test fails, or a response does not match the spec |
+| `test:presence` | `go list` | a package has no tests (except `package main` and generated code) |
 | `vuln` | govulncheck | the code calls a function with a known vulnerability |
-| `arch` | go-arch-lint (`.go-arch-lint.yml`) | an import breaks the layer rules or uses a vendor that is not allowed |
+| `arch` | go-arch-lint (`.go-arch-lint.yml`) | an import breaks the layer rules, uses a vendor that is not allowed, or a file belongs to no component |
+| `easement` | easement + scip-go (`easement.yml`) | **warnings only for now**: an import with no arrow in `ARCHITECTURE.md`, an indirect dependency (`must_not_reach`), a `*Repository` type outside `order`/`storage`, a `storage` name outside its public symbols, an external module the domain may not use, rules for test files |
 | `secrets` | betterleaks | a secret is in git history or in any file git sees |
 | `api:breaking` | oasdiff | `api/openapi.yaml` breaks clients compared to `API_BASE` (default `main`) |
+
+easement is young, so its rules are in `warn` in `easement.yml`: they are
+reported but do not fail. go-arch-lint stays the gate for imports. Known limit of
+easement 0.4.5 for Go: an import counts as a link to one file of the package, so a
+chain through another file of the same package is not seen by `must_not_reach`.
+
+```sh
+mise run impact      # files that depend on your changes since API_BASE
+```
 
 `gen:check` runs first, the other checks run in parallel. `gen:check` puts the
 files back as they were, so it never changes your working tree.
@@ -98,10 +110,12 @@ API_BASE=origin/main mise run api:breaking
 
 ## CI
 
-[.github/workflows/check.yml](.github/workflows/check.yml) runs `mise run check`
-on every pull request and every push to `main`, with the tools from `mise.lock`.
-`API_BASE` is the target branch for a pull request and the previous commit for
-a push to `main`. Actions are pinned to commit SHAs.
+[.github/workflows/check.yml](.github/workflows/check.yml) runs every check
+above as **its own job** on every pull request and every push to `main`, so each
+check has its own status and log. All jobs run to the end, even when one fails.
+Tools come from `mise.lock`. `API_BASE` is the target branch for a pull request
+and the previous commit for a push to `main`. easement writes its warnings as
+annotations on the changed lines. Actions are pinned to commit SHAs.
 
 ## Coding agents
 
