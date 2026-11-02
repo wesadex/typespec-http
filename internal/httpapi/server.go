@@ -19,8 +19,8 @@ import (
 	"github.com/wesadex/typespec-http/internal/order"
 )
 
-// NewServer returns the HTTP handler of the Orders API. Every request is first
-// checked against the OpenAPI spec; invalid ones never reach the handler.
+// NewServer returns the HTTP handler of the Orders API. Every request is
+// logged, then checked against the OpenAPI spec; invalid ones never reach the handler.
 func NewServer(orders *order.Service, log *slog.Logger) (http.Handler, error) {
 	spec, err := api.GetSpec()
 	if err != nil {
@@ -49,7 +49,8 @@ func NewServer(orders *order.Service, log *slog.Logger) (http.Handler, error) {
 		ErrorHandlerWithOpts: validationError,
 	})
 
-	return validate(router), nil
+	// The access log is the outermost layer, so it also sees validation errors.
+	return accessLog(log, validate(router)), nil
 }
 
 func validationError(_ context.Context, err error, w http.ResponseWriter, _ *http.Request, opts nethttpmiddleware.ErrorHandlerOpts) {
