@@ -97,7 +97,9 @@ run = ["golangci-lint fmt --diff", "golangci-lint run"]
 [tasks.vuln]
 description = "Find known vulnerabilities in code that is really called"
 depends = ["gen"]
-run = "govulncheck ./..."
+# Verbose: also list vulnerabilities in imported packages and required modules
+# that the code does not call, so they can be updated early.
+run = "govulncheck -show verbose ./..."
 
 [tasks.arch]
 description = "Check architecture rules from .go-arch-lint.yml"
