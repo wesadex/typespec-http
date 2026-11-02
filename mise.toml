@@ -9,6 +9,12 @@ min_version = "2026.10.0"
 [tools]
 go = "1.27"
 node = "26"
+# Checkers: exact versions, so results do not change between machines.
+golangci-lint = "2.15.0"
+betterleaks = "1.9.0"
+"github:oasdiff/oasdiff" = "1.35.0"
+"github:fe3dback/go-arch-lint" = "1.19.1"
+"go:golang.org/x/vuln/cmd/govulncheck" = "1.9.0"
 
 [env]
 # Make `tsp` and other npm binaries of this project available.
@@ -62,3 +68,75 @@ run = "go build -o bin/orders ./cmd/orders"
 description = "Run the server (ADDR=:8080 by default)"
 depends = ["gen"]
 run = "go run ./cmd/orders"
+
+# ---- Checks. `mise run check` runs all of them; CI runs the same task. ----
+
+[tasks.lint]
+description = "Lint and format-check Go code"
+depends = ["gen"]
+run = ["golangci-lint fmt --diff", "golangci-lint run"]
+
+[tasks.vuln]
+description = "Find known vulnerabilities in code that is really called"
+depends = ["gen"]
+run = "govulncheck ./..."
+
+[tasks.arch]
+description = "Check architecture rules from .go-arch-lint.yml"
+run = "go-arch-lint check --output-color=false"
+
+[tasks."api:breaking"]
+description = "Fail on breaking API changes against API_BASE (default: main)"
+depends = ["gen:openapi"]
+run = '''
+base="${API_BASE:-main}"
+old="$(mktemp)"
+trap 'rm -f "$old"' EXIT
+if ! git show "$base:api/openapi.yaml" > "$old" 2>/dev/null; then
+  echo "api:breaking: $base has no api/openapi.yaml yet, nothing to compare"
+  exit 0
+fi
+oasdiff breaking "$old" api/openapi.yaml --fail-on ERR
+'''
+
+[tasks."gen:check"]
+description = "Fail if generated files or go.mod are stale or edited by hand"
+run = '''
+# Regenerate from scratch and compare with the files as they are now.
+# The original files are put back, so this check never changes the tree.
+before="$(mktemp -d)"
+trap 'rm -rf "$before"' EXIT
+mkdir -p "$before/spec" "$before/code"
+cp -R api/. "$before/spec/"
+cp -R internal/api/. "$before/code/"
+
+mise run --force gen >/dev/null
+
+stale=0
+diff -ru "$before/spec" api || stale=1
+diff -ru "$before/code" internal/api || stale=1
+if [ "$stale" -ne 0 ]; then
+  rm -rf api internal/api
+  mkdir -p api internal/api
+  cp -R "$before/spec/." api/
+  cp -R "$before/code/." internal/api/
+  echo "gen:check: generated files are stale or were edited by hand (diff above)."
+  echo "Fix: change spec/main.tsp if needed, run 'mise run gen', commit the result."
+  exit 1
+fi
+go mod tidy -diff
+'''
+
+[tasks.check]
+description = "Run every check (the same as CI)"
+run = [
+  "mise run gen:check",
+  "mise run lint ::: test ::: vuln ::: arch ::: secrets ::: api:breaking",
+]
+
+[tasks.secrets]
+description = "Find secrets in git history and in all files git sees (not ignored ones)"
+run = [
+  "betterleaks git --no-banner --redact .",
+  "git ls-files -z -co --exclude-standard | xargs -0 betterleaks dir --no-banner --redact",
+]

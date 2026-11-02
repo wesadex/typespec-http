@@ -2,6 +2,73 @@
 
 lockfile_version = 3
 
+[[tools.betterleaks]]
+version = "1.9.0"
+backend = "aqua:betterleaks/betterleaks"
+specifiers = ["1.9.0"]
+
+[tools.betterleaks."platforms.linux-arm64"]
+checksum = "sha256:1d39116e0a58dc94574715e2aa12a2dbd5062f193eee3fec011fef6ba06bd13b"
+url = "https://github.com/betterleaks/betterleaks/releases/download/v1.9.0/betterleaks_1.9.0_linux_arm64.tar.gz"
+url_api = "https://api.github.com/repos/betterleaks/betterleaks/releases/assets/599108932"
+provenance = "cosign"
+
+[tools.betterleaks."platforms.linux-x64"]
+checksum = "sha256:f8b185a39ffcece2a1ca82bf3a4e7435cd81963ffd16b7a9128daf75f35f6de7"
+url = "https://github.com/betterleaks/betterleaks/releases/download/v1.9.0/betterleaks_1.9.0_linux_x64.tar.gz"
+url_api = "https://api.github.com/repos/betterleaks/betterleaks/releases/assets/599108929"
+provenance = "cosign"
+
+[tools.betterleaks."platforms.macos-arm64"]
+checksum = "sha256:83dd7eaab13d44a1e8e347a17064cdef153a1478db473276d41b38d55613d3f2"
+url = "https://github.com/betterleaks/betterleaks/releases/download/v1.9.0/betterleaks_1.9.0_darwin_arm64.tar.gz"
+url_api = "https://api.github.com/repos/betterleaks/betterleaks/releases/assets/599108927"
+provenance = "cosign"
+
+[[tools."github:fe3dback/go-arch-lint"]]
+version = "1.19.1"
+backend = "github:fe3dback/go-arch-lint"
+specifiers = ["1.19.1"]
+
+[tools."github:fe3dback/go-arch-lint"."platforms.linux-arm64"]
+checksum = "sha256:57a7b08c375db614a3504df421dbff60209a5f5e444298a26b316889666b5484"
+checksum_source = "mise-versions"
+url = "https://github.com/fe3dback/go-arch-lint/releases/download/v1.19.1/go-arch-lint_1.19.1_linux_arm64.tar.gz"
+url_api = "https://api.github.com/repos/fe3dback/go-arch-lint/releases/assets/689528037"
+
+[tools."github:fe3dback/go-arch-lint"."platforms.linux-x64"]
+checksum = "sha256:26730d19b6acd20f3e922f71f5a7ec1c4e873894666fa9ad7bf03496ac17b06e"
+checksum_source = "mise-versions"
+url = "https://github.com/fe3dback/go-arch-lint/releases/download/v1.19.1/go-arch-lint_1.19.1_linux_amd64.tar.gz"
+url_api = "https://api.github.com/repos/fe3dback/go-arch-lint/releases/assets/689528036"
+
+[tools."github:fe3dback/go-arch-lint"."platforms.macos-arm64"]
+checksum = "sha256:e2e9e80594afe21c2e2aedddcfce8df77eca19b055cfce0a1be11e85d06c9e49"
+url = "https://github.com/fe3dback/go-arch-lint/releases/download/v1.19.1/go-arch-lint_1.19.1_darwin_arm64.tar.gz"
+url_api = "https://api.github.com/repos/fe3dback/go-arch-lint/releases/assets/689528179"
+
+[[tools."github:oasdiff/oasdiff"]]
+version = "1.35.0"
+backend = "github:oasdiff/oasdiff"
+specifiers = ["1.35.0"]
+
+[tools."github:oasdiff/oasdiff"."platforms.linux-arm64"]
+checksum = "sha256:1f8b5aa033cd0240ae6c53460268bcd6e578526666a4487a781ece8cef39fbdd"
+checksum_source = "mise-versions"
+url = "https://github.com/oasdiff/oasdiff/releases/download/v1.35.0/oasdiff_1.35.0_linux_arm64.tar.gz"
+url_api = "https://api.github.com/repos/oasdiff/oasdiff/releases/assets/685622226"
+
+[tools."github:oasdiff/oasdiff"."platforms.linux-x64"]
+checksum = "sha256:a8023002fcb2eaa7f5758148a9303cb63d33b939886df312268bc0fc7b939140"
+checksum_source = "mise-versions"
+url = "https://github.com/oasdiff/oasdiff/releases/download/v1.35.0/oasdiff_1.35.0_linux_amd64.tar.gz"
+url_api = "https://api.github.com/repos/oasdiff/oasdiff/releases/assets/685622252"
+
+[tools."github:oasdiff/oasdiff"."platforms.macos-arm64"]
+checksum = "sha256:964ad2c0331768c4515fc49779827094bc89a65b1d309dac28886d1c3faf305c"
+url = "https://github.com/oasdiff/oasdiff/releases/download/v1.35.0/oasdiff_1.35.0_darwin_all.tar.gz"
+url_api = "https://api.github.com/repos/oasdiff/oasdiff/releases/assets/685622242"
+
 [[tools.go]]
 version = "1.27.3"
 backend = "core:go"
@@ -18,6 +85,34 @@ url = "https://dl.google.com/go/go1.27.3.linux-amd64.tar.gz"
 [tools.go."platforms.macos-arm64"]
 checksum = "sha256:dd3908cf20959d798c1e06ebe5b72213f0505ce01373b40ce3110975a6cd99c2"
 url = "https://dl.google.com/go/go1.27.3.darwin-arm64.tar.gz"
+
+[[tools."go:golang.org/x/vuln/cmd/govulncheck"]]
+version = "1.9.0"
+backend = "go:golang.org/x/vuln/cmd/govulncheck"
+specifiers = ["1.9.0"]
+
+[[tools.golangci-lint]]
+version = "2.15.0"
+backend = "aqua:golangci/golangci-lint"
+specifiers = ["2.15.0"]
+
+[tools.golangci-lint."platforms.linux-arm64"]
+checksum = "sha256:b4d8f17068b35ee6060cc2f69a16fb48740d706fbba81661c318649c114a6998"
+url = "https://github.com/golangci/golangci-lint/releases/download/v2.15.0/golangci-lint-2.15.0-linux-arm64.tar.gz"
+url_api = "https://api.github.com/repos/golangci/golangci-lint/releases/assets/647132775"
+provenance = "github-attestations"
+
+[tools.golangci-lint."platforms.linux-x64"]
+checksum = "sha256:9b7fe6a6bf6334b98decf8d86b11415ea7889afdabdd1959fdce23af2a9ebcea"
+url = "https://github.com/golangci/golangci-lint/releases/download/v2.15.0/golangci-lint-2.15.0-linux-amd64.tar.gz"
+url_api = "https://api.github.com/repos/golangci/golangci-lint/releases/assets/647132535"
+provenance = "github-attestations"
+
+[tools.golangci-lint."platforms.macos-arm64"]
+checksum = "sha256:d1e409481a8ca846c4bc97e781eb5cb1bd5c23353a0b3977a1cbda1b1b6447d5"
+url = "https://github.com/golangci/golangci-lint/releases/download/v2.15.0/golangci-lint-2.15.0-darwin-arm64.tar.gz"
+url_api = "https://api.github.com/repos/golangci/golangci-lint/releases/assets/647132534"
+provenance = "github-attestations"
 
 [[tools.node]]
 version = "26.13.0"

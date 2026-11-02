@@ -68,7 +68,7 @@ func TestGetOrderByID(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			req := httptest.NewRequest(tt.method, tt.path, nil)
+			req := httptest.NewRequestWithContext(t.Context(), tt.method, tt.path, nil)
 			rec := httptest.NewRecorder()
 			srv.ServeHTTP(rec, req)
 
@@ -119,7 +119,7 @@ func TestErrorResponsesMatchSpec(t *testing.T) {
 		t.Fatal(err)
 	}
 	for _, path := range []string{"/orders/2", "/orders/0", "/orders/abc"} {
-		req := httptest.NewRequest(http.MethodGet, path, nil)
+		req := httptest.NewRequestWithContext(t.Context(), http.MethodGet, path, nil)
 		rec := httptest.NewRecorder()
 		srv.ServeHTTP(rec, req)
 		assertMatchesSpec(t, req, rec)

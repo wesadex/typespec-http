@@ -1,0 +1,39 @@
+# Runs the same checks as `mise run check` on a developer machine.
+name: check
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: check-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # Full history: betterleaks scans it, oasdiff reads the base spec from it.
+          fetch-depth: 0
+          persist-credentials: false
+
+      # Installs the tools from mise.lock (checksums verified, --locked is automatic).
+      - uses: jdx/mise-action@6612f0ef07ed2a736cd1e00a94a065522dd41195 # v5.2.5
+        with:
+          version: 2026.10.25
+          install: true
+          cache: true
+
+      - name: mise run check
+        run: mise run check
+        env:
+          # Pull request: compare the API with the target branch.
+          # Push to main: compare with the previous commit.
+          API_BASE: ${{ github.event_name == 'pull_request' && format('origin/{0}', github.base_ref) || 'HEAD~1' }}

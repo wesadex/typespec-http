@@ -71,6 +71,43 @@ Dependencies go one way: `cmd` → `httpapi` → `order` ← `storage`.
 Requests are checked against the OpenAPI spec before they reach the handler,
 and the tests check every response against the spec too.
 
+## Checks
+
+```sh
+mise run check       # all checks below; CI runs the same task
+```
+
+| Task | Tool | Fails when |
+|---|---|---|
+| `gen:check` | tsp, oapi-codegen, `go mod tidy -diff` | generated files are stale or edited by hand; `go.mod` is not tidy |
+| `lint` | golangci-lint (`.golangci.yml`) | lint issues or unformatted code |
+| `test` | `go test -race` | a test fails, or a response does not match the spec |
+| `vuln` | govulncheck | the code calls a function with a known vulnerability |
+| `arch` | go-arch-lint (`.go-arch-lint.yml`) | an import breaks the layer rules or uses a vendor that is not allowed |
+| `secrets` | betterleaks | a secret is in git history or in any file git sees |
+| `api:breaking` | oasdiff | `api/openapi.yaml` breaks clients compared to `API_BASE` (default `main`) |
+
+`gen:check` runs first, the other checks run in parallel. `gen:check` puts the
+files back as they were, so it never changes your working tree.
+
+In a pull request, compare with the target branch:
+
+```sh
+API_BASE=origin/main mise run api:breaking
+```
+
+## CI
+
+[.github/workflows/check.yml](.github/workflows/check.yml) runs `mise run check`
+on every pull request and every push to `main`, with the tools from `mise.lock`.
+`API_BASE` is the target branch for a pull request and the previous commit for
+a push to `main`. Actions are pinned to commit SHAs.
+
+## Coding agents
+
+Rules for coding agents are in [AGENTS.md](AGENTS.md). `CLAUDE.md` imports it
+for Claude Code.
+
 ## Generated files
 
 ```text
@@ -88,3 +125,8 @@ settings are in `oapi-codegen.yaml`.
 
 Change the version in `mise.toml`, then run `mise lock` and commit `mise.lock`.
 It keeps entries for every platform in `lockfile_platforms`.
+
+Checkers (golangci-lint, betterleaks, oasdiff, go-arch-lint, govulncheck) have
+exact versions in `mise.toml`, so a new release cannot change the results by
+itself. `govulncheck` comes from the `go:` backend and is built from source, so
+`mise.lock` has its version but no binary checksum.
