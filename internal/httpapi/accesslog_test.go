@@ -21,13 +21,22 @@ func TestAccessLog(t *testing.T) {
 		path       string
 		wantStatus int
 		wantLevel  string
+		wantCode   string // error_code; empty means no error fields in the log
+		wantError  string // part of the error text
 	}{
 		{name: "ok", method: http.MethodGet, path: "/orders/1", wantStatus: 200, wantLevel: "INFO"},
-		{name: "not found in handler", method: http.MethodGet, path: "/orders/2", wantStatus: 404, wantLevel: "WARN"},
-		{name: "rejected by validator", method: http.MethodGet, path: "/orders/0", wantStatus: 400, wantLevel: "WARN"},
-		{name: "unknown path", method: http.MethodGet, path: "/nope", wantStatus: 404, wantLevel: "WARN"},
-		{name: "wrong method", method: http.MethodDelete, path: "/orders/1", wantStatus: 405, wantLevel: "WARN"},
-		{name: "server error", repo: failingRepo{}, method: http.MethodGet, path: "/orders/1", wantStatus: 500, wantLevel: "ERROR"},
+		{name: "not found in handler", method: http.MethodGet, path: "/orders/2", wantStatus: 404, wantLevel: "WARN",
+			wantCode: "order_not_found", wantError: "order 2 not found"},
+		{name: "id below minimum", method: http.MethodGet, path: "/orders/0", wantStatus: 400, wantLevel: "WARN",
+			wantCode: "invalid_request", wantError: "must be at least 1"},
+		{name: "id not a number", method: http.MethodGet, path: "/orders/abc", wantStatus: 400, wantLevel: "WARN",
+			wantCode: "invalid_request", wantError: "invalid integer"},
+		{name: "unknown path", method: http.MethodGet, path: "/nope", wantStatus: 404, wantLevel: "WARN",
+			wantCode: "not_found", wantError: "no such endpoint"},
+		{name: "wrong method", method: http.MethodDelete, path: "/orders/1", wantStatus: 405, wantLevel: "WARN",
+			wantCode: "method_not_allowed", wantError: "method not allowed"},
+		{name: "server error", repo: failingRepo{}, method: http.MethodGet, path: "/orders/1", wantStatus: 500, wantLevel: "ERROR",
+			wantCode: "internal_error", wantError: "internal server error"},
 	}
 
 	for _, tt := range tests {
@@ -57,6 +66,17 @@ func TestAccessLog(t *testing.T) {
 			}
 			if _, ok := line["duration_ms"].(float64); !ok {
 				t.Errorf("log has no duration_ms: %v", line)
+			}
+
+			if tt.wantCode == "" {
+				if _, ok := line["error_code"]; ok {
+					t.Errorf("success must not log error fields: %v", line)
+				}
+				return
+			}
+			errText, _ := line["error"].(string)
+			if line["error_code"] != tt.wantCode || !strings.Contains(errText, tt.wantError) {
+				t.Errorf("log error = %v / %q, want %s / ...%s...", line["error_code"], errText, tt.wantCode, tt.wantError)
 			}
 		})
 	}
