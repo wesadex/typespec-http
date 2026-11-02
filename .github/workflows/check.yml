@@ -1,5 +1,5 @@
 # Runs the same checks as `mise run check` on a developer machine.
-name: check
+name: Mise check
 
 on:
   push:
