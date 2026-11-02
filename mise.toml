@@ -157,7 +157,7 @@ go mod tidy -diff
 '''
 
 [tasks.check]
-description = "Run every check (CI runs each of them as a separate job)"
+description = "Run every check (CI runs each of them as a separate step)"
 run = [
   "mise run gen:check",
   "mise run lint ::: test ::: test:presence ::: vuln ::: arch ::: easement ::: secrets ::: api:breaking",

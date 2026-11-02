@@ -1,4 +1,5 @@
-# One job per check, so each one has its own status and its own log.
+# One job, one step per check: each check has its own status and log, and the
+# tools are installed only once (the repo is private, so minutes count).
 # Locally `mise run check` runs all of them.
 name: Mise check
 
@@ -16,23 +17,14 @@ concurrency:
 
 jobs:
   check:
-    name: ${{ matrix.task }}
+    name: checks
     runs-on: ubuntu-24.04
     timeout-minutes: 20
-    strategy:
-      # Run every check to the end, even when another one fails.
-      fail-fast: false
-      matrix:
-        task:
-          - gen:check
-          - lint
-          - test
-          - test:presence
-          - vuln
-          - arch
-          - easement
-          - secrets
-          - api:breaking
+    env:
+      # Pull request: compare with the target branch. Push to main: with the previous commit.
+      API_BASE: ${{ github.event_name == 'pull_request' && format('origin/{0}', github.base_ref) || 'HEAD~1' }}
+      # easement writes GitHub annotations on the changed lines.
+      EASEMENT_FORMAT: github
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -41,17 +33,38 @@ jobs:
           persist-credentials: false
 
       # Installs the tools from mise.lock (checksums verified, --locked is automatic).
-      - uses: jdx/mise-action@6612f0ef07ed2a736cd1e00a94a065522dd41195 # v5.2.5
+      - id: tools
+        uses: jdx/mise-action@6612f0ef07ed2a736cd1e00a94a065522dd41195 # v5.2.5
         with:
           version: 2026.10.25
           install: true
           cache: true
 
-      - name: mise run ${{ matrix.task }}
-        run: mise run "$TASK"
-        env:
-          TASK: ${{ matrix.task }}
-          # Pull request: compare with the target branch. Push to main: with the previous commit.
-          API_BASE: ${{ github.event_name == 'pull_request' && format('origin/{0}', github.base_ref) || 'HEAD~1' }}
-          # easement writes GitHub annotations on the changed lines.
-          EASEMENT_FORMAT: github
+      # Run every check even when an earlier one failed, but only if the tools
+      # were installed. The job fails if any step failed.
+      - name: gen:check
+        run: mise run gen:check
+      - name: lint
+        if: ${{ !cancelled() && steps.tools.outcome == 'success' }}
+        run: mise run lint
+      - name: test
+        if: ${{ !cancelled() && steps.tools.outcome == 'success' }}
+        run: mise run test
+      - name: test:presence
+        if: ${{ !cancelled() && steps.tools.outcome == 'success' }}
+        run: mise run test:presence
+      - name: vuln
+        if: ${{ !cancelled() && steps.tools.outcome == 'success' }}
+        run: mise run vuln
+      - name: arch
+        if: ${{ !cancelled() && steps.tools.outcome == 'success' }}
+        run: mise run arch
+      - name: easement
+        if: ${{ !cancelled() && steps.tools.outcome == 'success' }}
+        run: mise run easement
+      - name: secrets
+        if: ${{ !cancelled() && steps.tools.outcome == 'success' }}
+        run: mise run secrets
+      - name: api:breaking
+        if: ${{ !cancelled() && steps.tools.outcome == 'success' }}
+        run: mise run api:breaking

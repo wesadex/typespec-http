@@ -75,7 +75,7 @@ the spec too.
 ## Checks
 
 ```sh
-mise run check       # all checks below; CI runs each one as a separate job
+mise run check       # all checks below; CI runs each one as a separate step
 ```
 
 | Task | Tool | Fails when |
@@ -110,10 +110,11 @@ API_BASE=origin/main mise run api:breaking
 
 ## CI
 
-[.github/workflows/check.yml](.github/workflows/check.yml) runs every check
-above as **its own job** on every pull request and every push to `main`, so each
-check has its own status and log. All jobs run to the end, even when one fails.
-Tools come from `mise.lock`. `API_BASE` is the target branch for a pull request
+[.github/workflows/check.yml](.github/workflows/check.yml) runs on every pull
+request and every push to `main`, on a GitHub-hosted runner. It is **one job with
+one step per check**: each check has its own status and log, and the tools are
+installed only once, which keeps the billed minutes low (the repository is
+private). All checks run to the end, even when one fails. Tools come from `mise.lock`. `API_BASE` is the target branch for a pull request
 and the previous commit for a push to `main`. easement writes its warnings as
 annotations on the changed lines. Actions are pinned to commit SHAs.
 
