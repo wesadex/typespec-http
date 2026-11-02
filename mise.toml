@@ -1,0 +1,64 @@
+# Project toolchain. Works on macOS (arm64) and Debian Linux (x64, arm64).
+# Exact versions and checksums for each platform are in mise.lock.
+#
+#   mise install      # install the tools below
+#   mise run setup    # install npm packages (TypeSpec)
+
+min_version = "2026.10.0"
+
+[tools]
+go = "1.27"
+node = "26"
+
+[env]
+# Make `tsp` and other npm binaries of this project available.
+_.path = ["{{config_root}}/node_modules/.bin"]
+
+[settings]
+lockfile = true
+# Keep mise.lock valid for every OS the team uses, not only the current one.
+lockfile_platforms = ["macos-arm64", "linux-x64", "linux-arm64"]
+
+[tasks.setup]
+description = "Install npm packages from package-lock.json"
+sources = ["package.json", "package-lock.json"]
+outputs = ["node_modules/.package-lock.json"]
+run = "npm ci"
+
+[tasks."spec:check"]
+description = "Check the TypeSpec spec for errors, without writing files"
+depends = ["setup"]
+run = "tsp compile spec/main.tsp --no-emit --warn-as-error"
+
+[tasks."gen:openapi"]
+description = "Generate api/openapi.yaml from the TypeSpec spec"
+depends = ["setup"]
+sources = ["spec/**/*.tsp", "tspconfig.yaml", "package-lock.json"]
+outputs = ["api/openapi.yaml"]
+run = "tsp compile spec/main.tsp --config tspconfig.yaml --warn-as-error"
+
+[tasks."gen:go"]
+description = "Generate Go server code from api/openapi.yaml"
+depends = ["gen:openapi"]
+sources = ["api/openapi.yaml", "oapi-codegen.yaml", "go.mod"]
+outputs = ["internal/api/api.gen.go"]
+run = "go tool oapi-codegen -config oapi-codegen.yaml api/openapi.yaml"
+
+[tasks.gen]
+description = "Generate everything: OpenAPI from TypeSpec, then Go code"
+depends = ["gen:go"]
+
+[tasks.test]
+description = "Run Go tests with the race detector"
+depends = ["gen"]
+run = "go test -race -count=1 ./..."
+
+[tasks.build]
+description = "Build the server binary to bin/orders"
+depends = ["gen"]
+run = "go build -o bin/orders ./cmd/orders"
+
+[tasks.run]
+description = "Run the server (ADDR=:8080 by default)"
+depends = ["gen"]
+run = "go run ./cmd/orders"

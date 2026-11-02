@@ -1,0 +1,124 @@
+openapi: 3.0.0
+info:
+  title: Orders API
+  version: 0.1.0
+  description: 'Orders service: read orders by id.'
+tags:
+  - name: Orders
+paths:
+  /orders/{id}:
+    get:
+      operationId: getOrderById
+      description: Get one order by its id.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+        '400':
+          description: The server could not understand the request due to invalid syntax.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorBody'
+        '404':
+          description: The server cannot find the requested resource.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorBody'
+      tags:
+        - Orders
+components:
+  schemas:
+    ErrorBody:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+          description: Machine-readable code, for example "order_not_found".
+        message:
+          type: string
+          description: Text for humans.
+      description: Error body for every error response.
+    Money:
+      type: object
+      required:
+        - amount
+        - currency
+      properties:
+        amount:
+          type: string
+          pattern: ^-?\d+(\.\d{1,2})?$
+          description: Decimal number with up to 2 digits after the point.
+          example: '1999.90'
+        currency:
+          type: string
+          pattern: ^[A-Z]{3}$
+          description: ISO 4217 currency code.
+          example: EUR
+      description: |-
+        Money as an exact decimal string, never a float.
+        Example: { "amount": "1999.90", "currency": "EUR" }.
+    Order:
+      type: object
+      required:
+        - id
+        - user_id
+        - created_date
+        - last_changed_date
+        - last_changed_by
+        - total_amount
+        - delivery_address
+        - status
+      properties:
+        id:
+          type: integer
+          format: int64
+          minimum: 1
+          description: Order id.
+        user_id:
+          type: integer
+          format: int64
+          minimum: 1
+          description: User who owns the order.
+        created_date:
+          type: string
+          format: date-time
+        last_changed_date:
+          type: string
+          format: date-time
+        last_changed_by:
+          type: integer
+          format: int64
+          minimum: 1
+          description: User who made the last change.
+        total_amount:
+          $ref: '#/components/schemas/Money'
+        delivery_address:
+          type: string
+          minLength: 1
+        status:
+          $ref: '#/components/schemas/OrderStatus'
+      description: A customer order.
+    OrderStatus:
+      type: string
+      enum:
+        - created
+        - paid
+        - cancelled
+        - done
+      description: Lifecycle of an order.

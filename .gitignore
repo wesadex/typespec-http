@@ -28,6 +28,15 @@ go.work.sum
 # env file
 .env
 
+# Build output of `mise run build`
+bin/
+
+# npm packages (TypeSpec), installed by `mise run setup`
+node_modules/
+
+# Personal mise overrides
+mise.local.toml
+
 # Editor/IDE
 # .idea/
 # .vscode/

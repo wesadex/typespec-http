@@ -1,0 +1,15 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/oapi-codegen/oapi-codegen/HEAD/configuration-schema.json
+# Go code for the Orders API, generated from api/openapi.yaml.
+package: api
+output: internal/api/api.gen.go
+generate:
+  models: true
+  # Plain net/http router from the standard library (Go 1.22+ patterns).
+  std-http-server: true
+  # Typed request and response objects: only responses from the spec compile.
+  strict-server: true
+  # Spec inside the binary, for request validation middleware.
+  embedded-spec: true
+compatibility:
+  # OrderStatusPaid instead of Paid: no clashes with other names in the package.
+  always-prefix-enum-values: true

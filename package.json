@@ -1,0 +1,11 @@
+{
+  "name": "orders-spec",
+  "private": true,
+  "description": "TypeSpec libraries for the Orders API. Node itself comes from mise.",
+  "devDependencies": {
+    "@typespec/compiler": "1.17.0",
+    "@typespec/http": "1.17.0",
+    "@typespec/openapi": "1.17.0",
+    "@typespec/openapi3": "1.17.0"
+  }
+}
