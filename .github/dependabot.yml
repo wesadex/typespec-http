@@ -1,0 +1,23 @@
+# Weekly update PRs for pinned dependencies. Each PR runs the full CI check.
+# Not covered: tools in mise.toml and the mise version in check.yml; update
+# those by hand (`mise upgrade`, then `mise lock`).
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule: { interval: weekly }
+    cooldown: { default-days: 7 }
+    groups:
+      actions: { patterns: ["*"] }
+  - package-ecosystem: gomod
+    directory: /
+    schedule: { interval: weekly }
+    cooldown: { default-days: 7 }
+    groups:
+      go: { patterns: ["*"] }
+  - package-ecosystem: npm
+    directory: /
+    schedule: { interval: weekly }
+    cooldown: { default-days: 7 }
+    groups:
+      typespec: { patterns: ["@typespec/*"] }

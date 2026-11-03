@@ -34,9 +34,20 @@ model Money {
 }
 
 /** A customer order. */
+@example(#{
+  id: 1,
+  user_id: 42,
+  created_date: utcDateTime.fromISO("2026-10-30T09:15:00Z"),
+  last_changed_date: utcDateTime.fromISO("2026-10-30T11:15:00Z"),
+  last_changed_by: 42,
+  total_amount: #{ amount: "1999.90", currency: "EUR" },
+  delivery_address: "Alexanderplatz 1, 10178 Berlin",
+  status: OrderStatus.paid,
+})
 model Order {
   /** Order id. */
   @minValue(1)
+  @example(1)
   id: int64;
 
   /** User who owns the order. */
@@ -59,11 +70,14 @@ model Order {
 }
 
 /** Error body for every error response. */
+@example(#{ code: "order_not_found", message: "order 2 not found" })
 model ErrorBody {
   /** Machine-readable code, for example "order_not_found". */
+  @example("order_not_found")
   code: string;
 
   /** Text for humans. */
+  @example("order 2 not found")
   message: string;
 }
 
@@ -79,11 +93,21 @@ model BadRequestError {
   @body body: ErrorBody;
 }
 
+/** The server failed. The body never shows internal details. */
+@error
+model InternalServerError {
+  @statusCode _: 500;
+  @body body: ErrorBody;
+}
+
 @route("/orders")
 @tag("Orders")
 interface OrdersApi {
   /** Get one order by its id. */
   @get
   @operationId("getOrderById")
-  getById(@path @minValue(1) id: int64): Order | BadRequestError | NotFoundError;
+  getById(
+    /** Order id. */
+    @path @minValue(1) id: int64,
+  ): Order | BadRequestError | NotFoundError | InternalServerError;
 }

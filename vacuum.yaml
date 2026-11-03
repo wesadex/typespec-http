@@ -1,0 +1,7 @@
+# OpenAPI lint rules for `mise run spec:lint` (vacuum, Spectral-compatible).
+extends: [[spectral:oas, recommended]]
+rules:
+  # The API uses snake_case (user_id, created_date). Renaming is a breaking change.
+  camel-case-properties: off
+  # The server runs on any host; NewServer clears the servers list on purpose.
+  oas3-api-servers: off

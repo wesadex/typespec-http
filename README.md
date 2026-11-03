@@ -82,13 +82,22 @@ mise run check       # all checks below; CI runs each one as a separate step
 |---|---|---|
 | `gen:check` | tsp, oapi-codegen, `go mod tidy -diff` | generated files are stale or edited by hand; `go.mod` is not tidy |
 | `lint` | golangci-lint (`.golangci.yml`) | lint issues or unformatted code; `fmt.Print*`, `log.*`, `http.DefaultClient`, `time.Now()` in the domain; a `//nolint` without linter name and reason, or one that hides nothing |
-| `test` | `go test -race` | a test fails, or a response does not match the spec |
+| `test` | `go test -race -shuffle=on` | a test fails, a response does not match the spec, or coverage of hand-written code (no `internal/api`, no `cmd`) is below `COVERAGE_MIN` (default 90%) |
 | `test:presence` | `go list` | a package has no tests (except `package main` and generated code) |
 | `vuln` | govulncheck | the code calls a function with a known vulnerability |
 | `arch` | go-arch-lint (`.go-arch-lint.yml`) | an import breaks the layer rules, uses a vendor that is not allowed, or a file belongs to no component |
 | `easement` | easement + scip-go (`easement.yml`) | **warnings only for now**: an import with no arrow in `ARCHITECTURE.md`, an indirect dependency (`must_not_reach`), a `*Repository` type outside `order`/`storage`, a `storage` name outside its public symbols, an external module the domain may not use, rules for test files |
 | `secrets` | betterleaks | a secret is in git history or in any file git sees |
 | `api:breaking` | oasdiff | `api/openapi.yaml` breaks clients compared to `API_BASE` (default `main`) |
+| `spec:lint` | vacuum (`vacuum.yaml`) | `api/openapi.yaml` has a lint error or warning (snake_case names and the empty `servers` list are allowed) |
+| `workflows` | actionlint, zizmor | a GitHub Actions workflow has a mistake or a security problem |
+| `licenses` | go-licenses | a Go dependency has a license other than Apache-2.0, BSD, ISC or MIT |
+| `npm:audit` | `npm audit` | an npm package has a known vulnerability of level high or above |
+
+Not part of `check`: `mise run test:fuzz` runs the fuzz test for `FUZZTIME`
+(default 30s). Dependabot ([.github/dependabot.yml](.github/dependabot.yml))
+opens weekly update PRs for GitHub Actions, Go modules and npm packages. It does
+not update the tools in `mise.toml`.
 
 easement is young, so its rules are in `warn` in `easement.yml`: they are
 reported but do not fail. go-arch-lint stays the gate for imports. Known limit of
@@ -115,8 +124,10 @@ request and every push to `main`, on a GitHub-hosted runner. It is **one job wit
 one step per check**: each check has its own status and log, and the tools are
 installed only once, which keeps the billed minutes low (the repository is
 private). All checks run to the end, even when one fails. Tools come from `mise.lock`. `API_BASE` is the target branch for a pull request
-and the previous commit for a push to `main`. easement writes its warnings as
-annotations on the changed lines. Actions are pinned to commit SHAs.
+and `main` before the push for a push to `main`, so a push of several commits
+is checked as a whole. easement and oasdiff write their results as
+annotations on the changed lines. The `test` step adds a coverage table to the
+job summary. Actions are pinned to commit SHAs.
 
 ## Coding agents
 
