@@ -38,6 +38,9 @@ jobs:
       - id: tools
         uses: jdx/mise-action@6612f0ef07ed2a736cd1e00a94a065522dd41195 # v5.2.5
         with:
+          # Same version as min_version in mise.toml: change both together.
+          # No `sha256` on purpose: without it the action checks mise against
+          # the signed release files, which is stronger than a plain hash.
           version: 2026.10.25
           install: true
           cache: true
