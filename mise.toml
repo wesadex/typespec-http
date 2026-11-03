@@ -4,7 +4,8 @@
 #   mise install      # install the tools below
 #   mise run setup    # install npm packages (TypeSpec)
 
-min_version = "2026.10.0"
+# Same version as mise-action in .github/workflows/check.yml: change both together.
+min_version = "2026.10.25"
 
 [tools]
 go = "1.27"
