@@ -21,10 +21,12 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     env:
-      # Pull request: compare with the target branch. Push to main: with the previous commit.
-      API_BASE: ${{ github.event_name == 'pull_request' && format('origin/{0}', github.base_ref) || 'HEAD~1' }}
-      # easement writes GitHub annotations on the changed lines.
+      # Pull request: compare with the target branch. Push to main: with main
+      # before the push, so a push of several commits is checked as a whole.
+      API_BASE: ${{ github.event_name == 'pull_request' && format('origin/{0}', github.base_ref) || github.event.before }}
+      # easement and oasdiff write GitHub annotations on the changed lines.
       EASEMENT_FORMAT: github
+      OASDIFF_FORMAT: githubactions
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -68,3 +70,15 @@ jobs:
       - name: api:breaking
         if: ${{ !cancelled() && steps.tools.outcome == 'success' }}
         run: mise run api:breaking
+      - name: spec:lint
+        if: ${{ !cancelled() && steps.tools.outcome == 'success' }}
+        run: mise run spec:lint
+      - name: workflows
+        if: ${{ !cancelled() && steps.tools.outcome == 'success' }}
+        run: mise run workflows
+      - name: licenses
+        if: ${{ !cancelled() && steps.tools.outcome == 'success' }}
+        run: mise run licenses
+      - name: npm:audit
+        if: ${{ !cancelled() && steps.tools.outcome == 'success' }}
+        run: mise run npm:audit

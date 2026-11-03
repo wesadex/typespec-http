@@ -14,6 +14,7 @@ paths:
         - name: id
           in: path
           required: true
+          description: Order id.
           schema:
             type: integer
             format: int64
@@ -37,6 +38,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorBody'
+        '500':
+          description: The server failed. The body never shows internal details.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorBody'
       tags:
         - Orders
 components:
@@ -50,10 +57,15 @@ components:
         code:
           type: string
           description: Machine-readable code, for example "order_not_found".
+          example: order_not_found
         message:
           type: string
           description: Text for humans.
+          example: order 2 not found
       description: Error body for every error response.
+      example:
+        code: order_not_found
+        message: order 2 not found
     Money:
       type: object
       required:
@@ -90,6 +102,7 @@ components:
           format: int64
           minimum: 1
           description: Order id.
+          example: 1
         user_id:
           type: integer
           format: int64
@@ -114,6 +127,17 @@ components:
         status:
           $ref: '#/components/schemas/OrderStatus'
       description: A customer order.
+      example:
+        id: 1
+        user_id: 42
+        created_date: '2026-10-30T09:15:00Z'
+        last_changed_date: '2026-10-30T11:15:00Z'
+        last_changed_by: 42
+        total_amount:
+          amount: '1999.90'
+          currency: EUR
+        delivery_address: Alexanderplatz 1, 10178 Berlin
+        status: paid
     OrderStatus:
       type: string
       enum:

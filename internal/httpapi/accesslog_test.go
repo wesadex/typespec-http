@@ -37,6 +37,8 @@ func TestAccessLog(t *testing.T) {
 			wantCode: "method_not_allowed", wantError: "method not allowed"},
 		{name: "server error", repo: failingRepo{}, method: http.MethodGet, path: "/orders/1", wantStatus: 500, wantLevel: "ERROR",
 			wantCode: "internal_error", wantError: "internal server error"},
+		{name: "panic", repo: panickingRepo{}, method: http.MethodGet, path: "/orders/1", wantStatus: 500, wantLevel: "ERROR",
+			wantCode: "internal_error", wantError: "internal server error"},
 	}
 
 	for _, tt := range tests {
@@ -80,6 +82,56 @@ func TestAccessLog(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestStatusRecorder(t *testing.T) {
+	t.Run("write without WriteHeader is 200", func(t *testing.T) {
+		rec := &statusRecorder{ResponseWriter: httptest.NewRecorder(), status: http.StatusOK}
+		_, _ = rec.Write([]byte("ok"))
+		if rec.status != http.StatusOK || rec.bytes != 2 || rec.errBody.Len() != 0 {
+			t.Errorf("status/bytes/errBody = %d/%d/%d, want 200/2/0", rec.status, rec.bytes, rec.errBody.Len())
+		}
+	})
+
+	t.Run("first WriteHeader wins", func(t *testing.T) {
+		rec := &statusRecorder{ResponseWriter: httptest.NewRecorder(), status: http.StatusOK}
+		rec.WriteHeader(http.StatusNotFound)
+		rec.WriteHeader(http.StatusInternalServerError)
+		if rec.status != http.StatusNotFound {
+			t.Errorf("status = %d, want 404", rec.status)
+		}
+	})
+
+	t.Run("WriteHeader after Write is ignored", func(t *testing.T) {
+		rec := &statusRecorder{ResponseWriter: httptest.NewRecorder(), status: http.StatusOK}
+		_, _ = rec.Write([]byte("ok"))
+		rec.WriteHeader(http.StatusInternalServerError)
+		if rec.status != http.StatusOK {
+			t.Errorf("status = %d, want 200", rec.status)
+		}
+	})
+
+	t.Run("error body is cut for the log", func(t *testing.T) {
+		rec := &statusRecorder{ResponseWriter: httptest.NewRecorder(), status: http.StatusOK}
+		rec.WriteHeader(http.StatusBadRequest)
+		chunk := bytes.Repeat([]byte("x"), 3<<10)
+		_, _ = rec.Write(chunk)
+		_, _ = rec.Write(chunk)
+		if rec.errBody.Len() != maxLoggedErrorBody || rec.bytes != 2*len(chunk) {
+			t.Errorf("errBody/bytes = %d/%d, want %d/%d", rec.errBody.Len(), rec.bytes, maxLoggedErrorBody, 2*len(chunk))
+		}
+	})
+
+	t.Run("ResponseController reaches the real writer", func(t *testing.T) {
+		inner := httptest.NewRecorder()
+		rec := &statusRecorder{ResponseWriter: inner, status: http.StatusOK}
+		if err := http.NewResponseController(rec).Flush(); err != nil {
+			t.Fatalf("Flush: %v", err)
+		}
+		if !inner.Flushed {
+			t.Error("the real writer was not flushed")
+		}
+	})
 }
 
 // findLogLine returns the only JSON log line with the given msg.

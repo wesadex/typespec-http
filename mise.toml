@@ -18,6 +18,10 @@ betterleaks = "1.9.0"
 # easement is young and changes fast: keep its rules in `warn` until it settles.
 "github:mokevnin/easement" = "0.4.5"
 "github:scip-code/scip-go" = "0.2.9"   # Go indexer that easement runs
+"github:daveshanley/vacuum" = "0.36.2"  # OpenAPI linter
+"github:rhysd/actionlint" = "1.7.12"    # GitHub Actions workflow linter
+"github:zizmorcore/zizmor" = "1.31.1"   # GitHub Actions security linter
+"go:github.com/google/go-licenses/v2" = "2.0.1"
 
 [env]
 # Make `tsp` and other npm binaries of this project available.
@@ -39,6 +43,11 @@ description = "Check the TypeSpec spec for errors, without writing files"
 depends = ["setup"]
 run = "tsp compile spec/main.tsp --no-emit --warn-as-error"
 
+[tasks."spec:lint"]
+description = "Lint the generated OpenAPI spec with vacuum (vacuum.yaml); warnings fail"
+depends = ["gen:openapi"]
+run = "vacuum lint --no-banner --no-style --details --fail-severity warn --ruleset vacuum.yaml api/openapi.yaml"
+
 [tasks."gen:openapi"]
 description = "Generate api/openapi.yaml from the TypeSpec spec"
 depends = ["setup"]
@@ -58,9 +67,31 @@ description = "Generate everything: OpenAPI from TypeSpec, then Go code"
 depends = ["gen:go"]
 
 [tasks.test]
-description = "Run Go tests with the race detector"
+description = "Run Go tests (race detector, random order) and fail below COVERAGE_MIN percent"
 depends = ["gen"]
-run = "go test -race -count=1 ./..."
+# Coverage counts hand-written code only: no generated code, no package main.
+run = '''
+min="${COVERAGE_MIN:-90}"
+mkdir -p bin
+go test -race -shuffle=on -count=1 -coverprofile=bin/coverage.out ./...
+grep -v -e '/internal/api/' -e '/cmd/' bin/coverage.out > bin/coverage.app.out
+go tool cover -func=bin/coverage.app.out > bin/coverage.txt
+total="$(awk '/^total:/ { sub("%", "", $3); print $3 }' bin/coverage.txt)"
+if [ -n "${GITHUB_STEP_SUMMARY:-}" ]; then
+  { echo "### Coverage: ${total}% (minimum ${min}%)"; echo '```'; cat bin/coverage.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+fi
+if ! awk -v t="$total" -v m="$min" 'BEGIN { exit !(t >= m) }'; then
+  grep -v '100.0%$' bin/coverage.txt
+  echo "test: coverage ${total}% is below ${min}%"
+  exit 1
+fi
+echo "test: coverage ${total}% (minimum ${min}%)"
+'''
+
+[tasks."test:fuzz"]
+description = "Run the fuzz tests for FUZZTIME each (default 30s); not part of check"
+depends = ["gen"]
+run = "go test -run '^$' -fuzz FuzzOrderAmount -fuzztime ${FUZZTIME:-30s} ./internal/httpapi/"
 
 [tasks."test:presence"]
 description = "Fail if a Go package has no tests (except package main and generated code)"
@@ -127,7 +158,8 @@ if ! git show "$base:api/openapi.yaml" > "$old" 2>/dev/null; then
   echo "api:breaking: $base has no api/openapi.yaml yet, nothing to compare"
   exit 0
 fi
-oasdiff breaking "$old" api/openapi.yaml --fail-on ERR
+# OASDIFF_FORMAT=githubactions in CI shows errors and warnings on the pull request.
+oasdiff breaking "$old" api/openapi.yaml --fail-on ERR --format "${OASDIFF_FORMAT:-text}"
 '''
 
 [tasks."gen:check"]
@@ -162,7 +194,7 @@ go mod tidy -diff
 description = "Run every check (CI runs each of them as a separate step)"
 run = [
   "mise run gen:check",
-  "mise run lint ::: test ::: test:presence ::: vuln ::: arch ::: easement ::: secrets ::: api:breaking",
+  "mise run lint ::: test ::: test:presence ::: vuln ::: arch ::: easement ::: secrets ::: api:breaking ::: spec:lint ::: workflows ::: licenses ::: npm:audit",
 ]
 
 [tasks.secrets]
@@ -171,3 +203,18 @@ run = [
   "betterleaks git --no-banner --redact .",
   "git ls-files -z -co --exclude-standard | xargs -0 betterleaks dir --no-banner --redact",
 ]
+
+[tasks.workflows]
+description = "Lint GitHub Actions workflows: actionlint for mistakes, zizmor for security"
+run = ["actionlint", "zizmor --offline --no-progress .github/"]
+
+[tasks.licenses]
+description = "Fail if a Go dependency has a license outside the allowed list"
+depends = ["gen"]
+# Our own module has no license file, so it is ignored.
+run = "go-licenses check ./... --ignore github.com/wesadex/typespec-http --allowed_licenses Apache-2.0,BSD-2-Clause,BSD-3-Clause,ISC,MIT"
+
+[tasks."npm:audit"]
+description = "Find known vulnerabilities in npm packages (TypeSpec, used only to generate code)"
+depends = ["setup"]
+run = "npm audit --audit-level=high"
