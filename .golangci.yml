@@ -40,12 +40,20 @@ linters:
         - pattern: ^time\.Now$
           pkg: ^time$
           msg: the domain gets time from its caller, so tests can control it
+        # Money is decimal.Decimal; a float rounds it. Checked everywhere.
+        - pattern: ^decimal\.(NewFromFloat|NewFromFloat32|NewFromFloatWithExponent|Decimal\.Float64|Decimal\.InexactFloat64)$
+          pkg: ^github\.com/shopspring/decimal$
+          msg: money must stay exact; do not convert decimal from or to float
+        # Only checked in internal/order, see exclusions below. Floats are fine
+        # elsewhere, for example for durations in logs.
+        - pattern: ^float(32|64)$
+          msg: the domain works with money; use decimal.Decimal, never a float
 
   exclusions:
     rules:
       - path-except: ^internal/order/
         linters: [forbidigo]
-        text: time\.Now
+        text: time\.Now|float(32|64)
 
 formatters:
   enable:
