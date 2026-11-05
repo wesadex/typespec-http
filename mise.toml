@@ -149,10 +149,15 @@ depends = ["gen"]
 run = "easement impact --color never --diff ${API_BASE:-main}"
 
 [tasks."api:breaking"]
-description = "Fail on breaking API changes against API_BASE (default: main)"
+description = "Fail on breaking API changes since the current branch left API_BASE (default: main)"
 depends = ["gen:openapi"]
 run = '''
-base="${API_BASE:-main}"
+# Compare with the commit where the current branch left API_BASE, not with the
+# tip of API_BASE: changes made on API_BASE later are not this branch's changes.
+if ! base="$(git merge-base "${API_BASE:-main}" HEAD)"; then
+  echo "api:breaking: no common commit of ${API_BASE:-main} and HEAD" >&2
+  exit 1
+fi
 old="$(mktemp)"
 trap 'rm -f "$old"' EXIT
 if ! git show "$base:api/openapi.yaml" > "$old" 2>/dev/null; then

@@ -28,7 +28,7 @@ name: `mise run --force gen`. After the task name it goes to the command instead
   `mise run gen:check` fails on hand edits and on stale files.
 - Do not make breaking API changes (removing or renaming a field, changing a
   type, making an optional field required) unless a human asked for it.
-  `mise run api:breaking` checks this against `main`.
+  `mise run api:breaking` checks this against the commit where the branch left `main`.
 - Money is a decimal string plus a currency code. Never use float types for money.
 
 ## Code layout and rules
