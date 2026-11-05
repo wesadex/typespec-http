@@ -4,7 +4,8 @@
 #   mise install      # install the tools below
 #   mise run setup    # install npm packages (TypeSpec)
 
-min_version = "2026.10.0"
+# Same version as mise-action in .github/workflows/check.yml: change both together.
+min_version = "2026.10.25"
 
 [tools]
 go = "1.27"
@@ -16,7 +17,7 @@ betterleaks = "1.9.0"
 "github:fe3dback/go-arch-lint" = "1.19.1"
 "go:golang.org/x/vuln/cmd/govulncheck" = "1.9.0"
 # easement is young and changes fast: keep its rules in `warn` until it settles.
-"github:mokevnin/easement" = "0.4.5"
+"github:mokevnin/easement" = "0.4.14"
 "github:scip-code/scip-go" = "0.2.9"   # Go indexer that easement runs
 "github:daveshanley/vacuum" = "0.36.2"  # OpenAPI linter
 "github:rhysd/actionlint" = "1.7.12"    # GitHub Actions workflow linter
@@ -148,10 +149,15 @@ depends = ["gen"]
 run = "easement impact --color never --diff ${API_BASE:-main}"
 
 [tasks."api:breaking"]
-description = "Fail on breaking API changes against API_BASE (default: main)"
+description = "Fail on breaking API changes since the current branch left API_BASE (default: main)"
 depends = ["gen:openapi"]
 run = '''
-base="${API_BASE:-main}"
+# Compare with the commit where the current branch left API_BASE, not with the
+# tip of API_BASE: changes made on API_BASE later are not this branch's changes.
+if ! base="$(git merge-base "${API_BASE:-main}" HEAD)"; then
+  echo "api:breaking: no common commit of ${API_BASE:-main} and HEAD" >&2
+  exit 1
+fi
 old="$(mktemp)"
 trap 'rm -f "$old"' EXIT
 if ! git show "$base:api/openapi.yaml" > "$old" 2>/dev/null; then

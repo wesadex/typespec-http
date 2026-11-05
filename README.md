@@ -88,7 +88,7 @@ mise run check       # all checks below; CI runs each one as a separate step
 | `arch` | go-arch-lint (`.go-arch-lint.yml`) | an import breaks the layer rules, uses a vendor that is not allowed, or a file belongs to no component |
 | `easement` | easement + scip-go (`easement.yml`) | **warnings only for now**: an import with no arrow in `ARCHITECTURE.md`, an indirect dependency (`must_not_reach`), a `*Repository` type outside `order`/`storage`, a `storage` name outside its public symbols, an external module the domain may not use, rules for test files |
 | `secrets` | betterleaks | a secret is in git history or in any file git sees |
-| `api:breaking` | oasdiff | `api/openapi.yaml` breaks clients compared to `API_BASE` (default `main`) |
+| `api:breaking` | oasdiff | `api/openapi.yaml` breaks clients compared to the commit where the branch left `API_BASE` (default `main`) |
 | `spec:lint` | vacuum (`vacuum.yaml`) | `api/openapi.yaml` has a lint error or warning (snake_case names and the empty `servers` list are allowed) |
 | `workflows` | actionlint, zizmor | a GitHub Actions workflow has a mistake or a security problem |
 | `licenses` | go-licenses | a Go dependency has a license other than Apache-2.0, BSD, ISC or MIT |
