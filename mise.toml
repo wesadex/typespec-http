@@ -17,7 +17,7 @@ betterleaks = "1.9.0"
 "github:fe3dback/go-arch-lint" = "1.19.1"
 "go:golang.org/x/vuln/cmd/govulncheck" = "1.9.0"
 # easement is young and changes fast: keep its rules in `warn` until it settles.
-"github:mokevnin/easement" = "0.4.5"
+"github:mokevnin/easement" = "0.4.14"
 "github:scip-code/scip-go" = "0.2.9"   # Go indexer that easement runs
 "github:daveshanley/vacuum" = "0.36.2"  # OpenAPI linter
 "github:rhysd/actionlint" = "1.7.12"    # GitHub Actions workflow linter

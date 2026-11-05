@@ -70,26 +70,27 @@ url = "https://github.com/fe3dback/go-arch-lint/releases/download/v1.19.1/go-arc
 url_api = "https://api.github.com/repos/fe3dback/go-arch-lint/releases/assets/689528179"
 
 [[tools."github:mokevnin/easement"]]
-version = "0.4.5"
+version = "0.4.14"
 backend = "github:mokevnin/easement"
-specifiers = ["0.4.5"]
+specifiers = ["0.4.14"]
 
 [tools."github:mokevnin/easement"."platforms.linux-arm64"]
-checksum = "sha256:a3aeebf6fc8a919f63985f4dc097aaa7b5cf6aa85957f61d007dedc6e8b05cd1"
+checksum = "sha256:b8c142f21157d2b4798f9e6ee3db5fe1191b5e04d2c20928e22b10d755749167"
 checksum_source = "mise-versions"
-url = "https://github.com/mokevnin/easement/releases/download/v0.4.5/easement-aarch64-unknown-linux-gnu.tar.xz"
-url_api = "https://api.github.com/repos/mokevnin/easement/releases/assets/700347549"
+url = "https://github.com/mokevnin/easement/releases/download/v0.4.14/easement-aarch64-unknown-linux-gnu.tar.xz"
+url_api = "https://api.github.com/repos/mokevnin/easement/releases/assets/711783995"
 
 [tools."github:mokevnin/easement"."platforms.linux-x64"]
-checksum = "sha256:80e19c50e972008522ae6fd07789aed87840e8d6400d4c998e59303804301513"
+checksum = "sha256:8024bcb02e0039e1ee1a774a2e734fd958c9e397ef6b8cebd3578b4d79a3c9fb"
 checksum_source = "mise-versions"
-url = "https://github.com/mokevnin/easement/releases/download/v0.4.5/easement-x86_64-unknown-linux-gnu.tar.xz"
-url_api = "https://api.github.com/repos/mokevnin/easement/releases/assets/700347604"
+url = "https://github.com/mokevnin/easement/releases/download/v0.4.14/easement-x86_64-unknown-linux-gnu.tar.xz"
+url_api = "https://api.github.com/repos/mokevnin/easement/releases/assets/711784032"
 
 [tools."github:mokevnin/easement"."platforms.macos-arm64"]
-checksum = "sha256:beacae205a1fd4ff0db56b7dd8ab0596a9761e6ed0505381d8ac46a0f6d12e86"
-url = "https://github.com/mokevnin/easement/releases/download/v0.4.5/easement-aarch64-apple-darwin.tar.xz"
-url_api = "https://api.github.com/repos/mokevnin/easement/releases/assets/700347547"
+checksum = "sha256:26cf6f4b9102c60eb0461ea5ae54fd4b62912f8b3a00499a32c408b771565ba5"
+checksum_source = "mise-versions"
+url = "https://github.com/mokevnin/easement/releases/download/v0.4.14/easement-aarch64-apple-darwin.tar.xz"
+url_api = "https://api.github.com/repos/mokevnin/easement/releases/assets/711783985"
 
 [[tools."github:oasdiff/oasdiff"]]
 version = "1.35.0"
