@@ -36,7 +36,7 @@ jobs:
 
       # Installs the tools from mise.lock (checksums verified, --locked is automatic).
       - id: tools
-        uses: jdx/mise-action@6612f0ef07ed2a736cd1e00a94a065522dd41195 # v5.2.5
+        uses: jdx/mise-action@f5be966e4a917d54244728e6a5fdcd1d93a35e6c # v5.2.6
         with:
           # Same version as min_version in mise.toml: change both together.
           # No `sha256` on purpose: without it the action checks mise against
